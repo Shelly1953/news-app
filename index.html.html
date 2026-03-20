@@ -392,8 +392,11 @@ function openDetail(idx, autoAnalyze) {
   document.getElementById("detail-source").style.color = a.color;
   const titleEl = document.getElementById("detail-title");
   titleEl.innerHTML = a.title + (a.zhTitle ? `<div style="font-size:clamp(14px,3.5vw,16px);color:#7EB8E8;font-weight:400;margin-top:8px;line-height:1.6;">📌 ${a.zhTitle}</div>` : "");
-  document.getElementById("detail-desc").textContent = a.desc || "";
-  document.getElementById("detail-desc").style.display = a.desc ? "block" : "none";
+  const descEl = document.getElementById("detail-desc");
+  const displayDesc = (a._showZh && a.zhDesc) ? a.zhDesc : (a.desc || "");
+  const hasDesc = !!displayDesc;
+  descEl.textContent = displayDesc;
+  descEl.style.display = hasDesc ? "block" : "none";
   if (a._aiCache) {
     document.getElementById("ai-content").innerHTML = `<div class="ai-result">${renderMd(a._aiCache)}</div>`;
     document.getElementById("analyze-btn").textContent = "🔄 重新分析";
@@ -535,8 +538,35 @@ async function analyzeArticle() {
 
   const btn = document.getElementById("analyze-btn");
   btn.disabled = true;
+  btn.textContent = "抓取全文...";
+  document.getElementById("ai-content").innerHTML = `<div style="display:flex;align-items:center;gap:8px;color:#555"><span class="spinner"></span>抓取全文中，請稍候...</div>`;
+
+  // Try to fetch full article text
+  let fullText = a.desc || "";
+  if (a.link && a.link.startsWith("http")) {
+    try {
+      const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(a.link)}`;
+      const pageRes = await fetch(proxyUrl);
+      const pageData = await pageRes.json();
+      if (pageData.contents) {
+        // Extract text from HTML - remove tags, scripts, styles
+        const raw = pageData.contents
+          .replace(/<script[\s\S]*?<\/script>/gi, "")
+          .replace(/<style[\s\S]*?<\/style>/gi, "")
+          .replace(/<[^>]+>/g, " ")
+          .replace(/\s+/g, " ")
+          .trim()
+          .slice(0, 4000); // Limit to 4000 chars to control tokens
+        if (raw.length > fullText.length) fullText = raw;
+      }
+    } catch {
+      // Fall back to summary if fetch fails
+    }
+  }
+
   btn.textContent = "分析中...";
-  document.getElementById("ai-content").innerHTML = `<div style="display:flex;align-items:center;gap:8px;color:#555"><span class="spinner"></span>分析中，請稍候...</div>`;
+  document.getElementById("ai-content").innerHTML = `<div style="display:flex;align-items:center;gap:8px;color:#555"><span class="spinner"></span>AI 分析中，請稍候...</div>`;
+
   try {
     const res = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
@@ -549,8 +579,8 @@ async function analyzeArticle() {
       body: JSON.stringify({
         model: "claude-sonnet-4-20250514",
         max_tokens: 1000,
-        system: "你是一位財經新聞分析師。請用繁體中文，以條列式分析新聞的：1) 核心事件（1句），2) 可能影響（2-3點），3) 投資人需注意（1-2點）。語氣專業簡潔。",
-        messages: [{ role: "user", content: `請分析這則新聞：\n標題：${a.title}\n內文：${a.desc}` }],
+        system: "你是一位財經新聞分析師。請用繁體中文，以條列式分析新聞的：1) 核心事件（1句），2) 可能影響（2-3點），3) 投資人需注意（1-2點）。語氣專業簡潔。如果內容包含廣告或無關文字請自動忽略。",
+        messages: [{ role: "user", content: `請分析這則新聞：\n標題：${a.title}\n內文：${fullText}` }],
       }),
     });
     const data = await res.json();
