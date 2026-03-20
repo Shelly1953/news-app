@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>財經要聞</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;700&display=swap" rel="stylesheet" />
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0F0F12; color: #E8E8E0; font-family: 'Noto Serif TC', Georgia, serif; min-height: 100vh; }
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-thumb { background: #444; border-radius: 2px; }
+
+  header { position: sticky; top: 0; z-index: 50; background: #0F0F12; border-bottom: 1px solid #1E1E25; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; }
+  header h1 { font-size: 24px; font-weight: 700; color: #F0EFE8; }
+  header p { font-size: 12px; color: #444; margin-top: 3px; }
+
+  .key-btn { padding: 8px 14px; border-radius: 6px; border: 1px solid #3A2A1A; background: #1F1008; color: #C8884A; cursor: pointer; font-size: 13px; font-family: inherit; transition: all 0.2s; }
+  .key-btn.set { border-color: #1A4A2A; background: #0A1F12; color: #5EC87A; }
+
+  .tabs { position: sticky; top: 65px; z-index: 40; background: #0F0F12; border-bottom: 1px solid #1A1A20; padding: 10px 14px; display: flex; gap: 8px; overflow-x: auto; }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab-btn { padding: 8px 18px; border-radius: 20px; border: 1px solid #2A2A32; background: transparent; color: #888; cursor: pointer; font-size: 14px; font-family: inherit; white-space: nowrap; transition: all 0.2s; }
+  .tab-btn:hover { border-color: #555; color: #ccc; }
+  .tab-btn.active { background: #E8E8E0; color: #0F0F12; border-color: transparent; font-weight: 600; }
+
+  .count { padding: 10px 18px 4px; color: #3A3A3A; font-size: 13px; }
+
+  main { padding: 8px 14px 40px; max-width: 720px; margin: 0 auto; }
+  .articles { display: flex; flex-direction: column; gap: 10px; }
+
+  .card { background: #18181D; border: 1px solid #2A2A32; border-radius: 8px; padding: 18px; cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden; animation: fadeIn 0.3s ease; }
+  .card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; }
+  .card:hover { background: #1E1E25; border-color: #3A3A45; transform: translateY(-1px); }
+  .card-meta { display: flex; justify-content: space-between; margin-bottom: 8px; }
+  .card-source { font-size: 12px; font-family: sans-serif; font-weight: 700; letter-spacing: 0.04em; }
+  .card-time { font-size: 12px; color: #3A3A3A; font-family: sans-serif; }
+  .card-title { font-size: 17px; line-height: 1.65; color: #DDDCD5; font-weight: 600; margin-bottom: 8px; }
+  .card-desc { font-size: 15px; color: #5A5A5A; line-height: 1.75; }
+  .card-actions { margin-top: 12px; display: flex; gap: 8px; align-items: center; }
+
+  .ai-btn { padding: 9px 18px; background: linear-gradient(135deg, #1A3A5C, #0D2A45); border: 1px solid #2A4A6C; border-radius: 6px; color: #7EB8E8; cursor: pointer; font-family: inherit; font-size: 15px; transition: all 0.2s; }
+  .ai-btn:hover { background: linear-gradient(135deg, #1E4570, #113255); }
+  .ai-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .orig-link { font-size: 13px; color: #444; text-decoration: none; }
+  .orig-link:hover { color: #888; }
+
+  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 20px; backdrop-filter: blur(4px); }
+  .overlay.hidden { display: none; }
+  .modal { background: #18181D; border: 1px solid #2A2A32; border-radius: 12px; padding: 28px; max-width: 560px; width: 100%; max-height: 85vh; overflow-y: auto; animation: fadeIn 0.3s ease; }
+  .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+  .modal-close { background: none; border: none; color: #555; cursor: pointer; font-size: 26px; line-height: 1; }
+
+  .key-status { background: #0A1F12; border: 1px solid #1A4A2A; border-radius: 8px; padding: 14px; margin-bottom: 20px; }
+  .key-status-label { font-size: 14px; color: #5EC87A; margin-bottom: 6px; }
+  .key-status-value { font-family: monospace; font-size: 14px; color: #668; }
+  .clear-btn { margin-top: 10px; background: none; border: 1px solid #4A2A2A; border-radius: 4px; padding: 5px 14px; color: #C85A5A; cursor: pointer; font-size: 14px; font-family: inherit; }
+
+  .key-guide { background: #0C1620; border: 1px solid #1A2A3A; border-radius: 8px; padding: 16px; margin-bottom: 20px; font-size: 14px; color: #557; line-height: 2; }
+  .key-guide-title { color: #7EB8E8; font-weight: 600; margin-bottom: 4px; }
+  .key-guide a { color: #7EB8E8; }
+
+  .key-input-wrap { position: relative; margin-top: 8px; }
+  .key-input { width: 100%; background: #0F0F12; border: 1px solid #2A2A32; border-radius: 6px; padding: 11px 70px 11px 14px; color: #E8E8E0; font-family: monospace; font-size: 14px; outline: none; }
+  .key-input:focus { border-color: #3A4A6C; }
+  .key-input::placeholder { color: #3A3A3A; }
+  .toggle-btn { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #555; cursor: pointer; font-size: 13px; font-family: inherit; }
+  .key-error { color: #C85A5A; font-size: 14px; margin-top: 8px; }
+  .save-btn { padding: 12px 20px; background: #1A3A5C; border: 1px solid #2A4A6C; border-radius: 6px; color: #7EB8E8; cursor: pointer; font-family: inherit; font-size: 16px; margin-top: 12px; width: 100%; transition: all 0.2s; }
+  .save-btn:hover { background: #1E4570; }
+
+  .detail-source { font-size: 13px; font-family: sans-serif; font-weight: 700; }
+  .detail-title { font-size: 20px; line-height: 1.65; margin-bottom: 16px; color: #F0EFE8; }
+  .detail-desc { font-size: 15px; color: #5A5A5A; line-height: 1.8; margin-bottom: 20px; border-bottom: 1px solid #1E1E25; padding-bottom: 20px; }
+  .ai-box { background: #0C1620; border: 1px solid #1A2A3A; border-radius: 8px; padding: 18px; margin-bottom: 14px; }
+  .ai-box-label { font-size: 13px; color: #7EB8E8; margin-bottom: 12px; font-family: sans-serif; letter-spacing: 0.05em; }
+  .ai-result { font-size: 15px; line-height: 1.95; color: #A8B8C8; white-space: pre-wrap; }
+  .ai-placeholder { color: #3A3A3A; font-size: 14px; }
+  .spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid #333; border-top-color: #7EB8E8; border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; margin-right: 8px; }
+  .orig-btn { display: block; text-align: center; padding: 10px; border: 1px solid #222; border-radius: 6px; color: #666; font-size: 14px; text-decoration: none; margin-top: 10px; }
+  .orig-btn:hover { color: #999; border-color: #333; }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+
+  .loading-spinner { display: flex; align-items: center; gap: 8px; color: #555; font-size: 13px; }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<header>
+  <div>
+    <h1>財經要聞</h1>
+    <p id="today-date"></p>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div class="loading-spinner" id="loading-indicator" style="display:none;">
+      <span class="spinner"></span>載入中
+    </div>
+    <button class="key-btn" id="key-btn" onclick="openKeyPanel()">⚠️ 設定金鑰</button>
+  </div>
+</header>
+
+<!-- Tabs -->
+<div class="tabs" id="tabs"></div>
+
+<!-- Count -->
+<div class="count" id="count"></div>
+
+<!-- Articles -->
+<main><div class="articles" id="articles"></div></main>
+
+<!-- API Key Modal -->
+<div class="overlay hidden" id="key-overlay" onclick="closeKeyPanel(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h2 style="font-size:20px;color:#F0EFE8;">設定 Claude API 金鑰</h2>
+      <button class="modal-close" onclick="closeKeyPanel()">×</button>
+    </div>
+    <div id="key-status-box" style="display:none;" class="key-status">
+      <div class="key-status-label">✓ 目前已設定金鑰</div>
+      <div class="key-status-value" id="key-masked"></div>
+      <button class="clear-btn" onclick="clearKey()">移除金鑰</button>
+    </div>
+    <p style="font-size:15px;color:#777;line-height:1.8;margin-bottom:6px;">AI 分析功能需要你自己的 Claude API 金鑰。</p>
+    <p style="font-size:13px;color:#444;line-height:1.7;margin-bottom:18px;">🔒 金鑰只儲存在你的電腦裡，不會傳送到任何第三方。</p>
+    <div class="key-guide">
+      <div class="key-guide-title">如何取得金鑰？</div>
+      1. 前往 <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a> 登入<br>
+      2. 左側點 <strong style="color:#aaa;">API Keys</strong><br>
+      3. 點 <strong style="color:#aaa;">Create Key</strong>，複製金鑰<br>
+      4. 貼到下方後儲存
+    </div>
+    <label style="font-size:15px;color:#888;">貼上你的 API 金鑰</label>
+    <div class="key-input-wrap">
+      <input type="password" class="key-input" id="key-input" placeholder="sk-ant-api03-..." onkeydown="if(event.key==='Enter')saveKey()" />
+      <button class="toggle-btn" onclick="toggleKeyVisibility()">顯示</button>
+    </div>
+    <div class="key-error" id="key-error"></div>
+    <button class="save-btn" onclick="saveKey()">儲存金鑰，開始使用 AI 分析</button>
+  </div>
+</div>
+
+<!-- Article Detail Modal -->
+<div class="overlay hidden" id="detail-overlay" onclick="closeDetail(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <span class="detail-source" id="detail-source"></span>
+      <button class="modal-close" onclick="closeDetail()">×</button>
+    </div>
+    <h2 class="detail-title" id="detail-title"></h2>
+    <p class="detail-desc" id="detail-desc"></p>
+    <div class="ai-box">
+      <div class="ai-box-label">✦ AI 深度分析</div>
+      <div id="ai-content"><div class="ai-placeholder">點擊下方按鈕開始分析</div></div>
+    </div>
+    <button class="ai-btn" id="analyze-btn" style="width:100%;margin-bottom:10px;" onclick="analyzeArticle()">✦ 開始 AI 分析</button>
+    <a id="detail-link" href="#" target="_blank" class="orig-btn" style="display:none;">前往原文閱讀 →</a>
+  </div>
+</div>
+
+<script>
+const SOURCES = [
+  { id: "bbc", name: "BBC 中文", icon: "🇬🇧", color: "#BB1919", url: "https://api.rss2json.com/v1/api.json?rss_url=https://feeds.bbci.co.uk/zhongwen/trad/rss.xml" },
+  { id: "edn", name: "經濟日報", icon: "📰", color: "#1A4A8A", url: "https://api.rss2json.com/v1/api.json?rss_url=https://money.udn.com/rssfeed/news/1001/5591/rss2.rss" },
+  { id: "ctee", name: "工商時報", icon: "💼", color: "#0D6B3E", url: "https://api.rss2json.com/v1/api.json?rss_url=https://ctee.com.tw/feed" },
+  { id: "nikkei", name: "日經中文", icon: "🗾", color: "#D4002A", url: "https://api.rss2json.com/v1/api.json?rss_url=https://zh.cn.nikkei.com/rss/all-cn.rss" },
+  { id: "reuters", name: "路透社", icon: "🌐", color: "#FF6200", url: "https://api.rss2json.com/v1/api.json?rss_url=https://feeds.reuters.com/reuters/CNtopNews" },
+];
+
+const MOCK = {
+  bbc: [
+    { title: "全球央行政策分歧加劇，美聯儲維持利率不變", desc: "美國聯準會在最新會議中決定維持基準利率，與部分歐洲央行降息形成對比，引發市場對全球貨幣政策走向的討論。", date: new Date(), link: null, sid: "bbc", sname: "BBC 中文", color: "#BB1919" },
+    { title: "台灣半導體出口創歷史新高", desc: "台灣積體電路製造商公布最新出口數據，在AI晶片需求強勁帶動下，半導體出口額再創新高紀錄。", date: new Date(Date.now()-3600000), link: null, sid: "bbc", sname: "BBC 中文", color: "#BB1919" },
+    { title: "日本GDP數據優於預期，日圓走強", desc: "日本最新公布的GDP成長數字超過市場預期，帶動日圓兌美元匯率走升，出口商股票普遍下跌。", date: new Date(Date.now()-7200000), link: null, sid: "bbc", sname: "BBC 中文", color: "#BB1919" },
+  ],
+  edn: [
+    { title: "台股加權指數衝破兩萬點大關", desc: "在外資持續買超與科技股帶動下，台灣加權股價指數突破兩萬點整數關卡，創近期新高。", date: new Date(Date.now()-1800000), link: null, sid: "edn", sname: "經濟日報", color: "#1A4A8A" },
+    { title: "房市管制新措施上路，交易量明顯萎縮", desc: "政府針對房地產市場推出的新一輪管制措施正式實施，市場觀望氣氛濃厚，短期交易量大幅下滑。", date: new Date(Date.now()-5400000), link: null, sid: "edn", sname: "經濟日報", color: "#1A4A8A" },
+  ],
+  ctee: [
+    { title: "AI伺服器需求爆發，台廠接單滿載", desc: "受惠於全球AI基礎建設投資熱潮，台灣伺服器製造商訂單能見度已延伸至明年下半年，產能嚴重供不應求。", date: new Date(Date.now()-2700000), link: null, sid: "ctee", sname: "工商時報", color: "#0D6B3E" },
+    { title: "能源轉型加速，離岸風電建置目標上調", desc: "政府宣布調高離岸風力發電建置目標，相關設備商與工程公司股價聞訊上漲，市場預期長線商機龐大。", date: new Date(Date.now()-6300000), link: null, sid: "ctee", sname: "工商時報", color: "#0D6B3E" },
+  ],
+  nikkei: [
+    { title: "日本企業海外投資再創新高，亞洲布局持續擴大", desc: "受日本國內市場飽和與勞動成本考量，日本大型企業加速海外直接投資，東南亞與台灣為主要目的地。", date: new Date(Date.now()-4500000), link: null, sid: "nikkei", sname: "日經中文", color: "#D4002A" },
+  ],
+  reuters: [
+    { title: "油價因中東局勢緊張而波動", desc: "中東地區地緣政治緊張情勢升溫，國際原油期貨價格劇烈波動，市場密切關注後續發展對供應鏈的衝擊。", date: new Date(Date.now()-9000000), link: null, sid: "reuters", sname: "路透社", color: "#FF6200" },
+    { title: "美中科技戰升級，晶片出口管制擴大", desc: "美國商務部宣布擴大對中國的半導體出口管制範圍，預計將影響多家跨國企業在華業務。", date: new Date(Date.now()-10800000), link: null, sid: "reuters", sname: "路透社", color: "#FF6200" },
+  ],
+};
+
+let allNews = {};
+let activeTab = "all";
+let currentArticle = null;
+
+function timeAgo(d) {
+  const m = (Date.now() - new Date(d)) / 60000;
+  if (m < 60) return Math.floor(m) + " 分鐘前";
+  if (m < 1440) return Math.floor(m/60) + " 小時前";
+  return Math.floor(m/1440) + " 天前";
+}
+function stripHtml(s) {
+  if (!s) return "";
+  return s.replace(/<[^>]*>/g,"").replace(/&[a-z]+;/gi," ").trim().slice(0,150);
+}
+function getKey() { try { return localStorage.getItem("news_html_key")||""; } catch { return ""; } }
+function setKey(k) { try { if(k) localStorage.setItem("news_html_key",k); else localStorage.removeItem("news_html_key"); } catch {} }
+
+// Init date
+document.getElementById("today-date").textContent = new Date().toLocaleDateString("zh-TW",{year:"numeric",month:"long",day:"numeric",weekday:"long"});
+
+// Init tabs
+function buildTabs() {
+  const t = document.getElementById("tabs");
+  t.innerHTML = `<button class="tab-btn ${activeTab==='all'?'active':''}" onclick="setTab('all')">全部</button>` +
+    SOURCES.map(s=>`<button class="tab-btn ${activeTab===s.id?'active':''}" onclick="setTab('${s.id}')">${s.icon} ${s.name}</button>`).join("");
+}
+
+function setTab(id) {
+  activeTab = id;
+  buildTabs();
+  renderArticles();
+}
+
+function getDisplayed() {
+  if (activeTab === "all") {
+    return Object.values(allNews).flat().sort((a,b)=>new Date(b.date)-new Date(a.date));
+  }
+  return allNews[activeTab] || [];
+}
+
+function renderArticles() {
+  const list = getDisplayed();
+  document.getElementById("count").textContent = `共 ${list.length} 則新聞`;
+  const el = document.getElementById("articles");
+  el.innerHTML = list.map((a,i) => `
+    <div class="card" style="--sc:${a.color}" onclick="openDetail(${i})">
+      <div class="card-meta">
+        <span class="card-source" style="color:${a.color}">${a.sname}</span>
+        <span class="card-time">${timeAgo(a.date)}</span>
+      </div>
+      <div class="card-title">${a.title}</div>
+      ${a.desc ? `<div class="card-desc">${a.desc}…</div>` : ""}
+      <div class="card-actions">
+        <button class="ai-btn" onclick="event.stopPropagation();openDetail(${i},true)">✦ AI 分析</button>
+        ${a.link ? `<a class="orig-link" href="${a.link}" target="_blank" onclick="event.stopPropagation()">原文 →</a>` : ""}
+      </div>
+    </div>
+  `).join("");
+  // Store reference for detail
+  window._displayed = list;
+}
+
+async function fetchSource(s) {
+  try {
+    const r = await fetch(s.url);
+    const d = await r.json();
+    if (d.items && d.items.length > 0) {
+      allNews[s.id] = d.items.slice(0,5).map(item=>({
+        title: item.title,
+        desc: stripHtml(item.description||item.content||""),
+        date: new Date(item.pubDate),
+        link: item.link,
+        sid: s.id, sname: s.name, color: s.color,
+      }));
+    } else {
+      allNews[s.id] = MOCK[s.id];
+    }
+  } catch {
+    allNews[s.id] = MOCK[s.id];
+  }
+  renderArticles();
+}
+
+function loadAll() {
+  const ind = document.getElementById("loading-indicator");
+  ind.style.display = "flex";
+  let pending = SOURCES.length;
+  SOURCES.forEach(s => fetchSource(s).finally(()=>{ if(--pending===0) ind.style.display="none"; }));
+}
+
+// Key panel
+function updateKeyBtn() {
+  const k = getKey();
+  const btn = document.getElementById("key-btn");
+  if (k) { btn.textContent = "🔑 金鑰已設定"; btn.className = "key-btn set"; }
+  else { btn.textContent = "⚠️ 設定金鑰"; btn.className = "key-btn"; }
+}
+
+function openKeyPanel() {
+  const k = getKey();
+  const box = document.getElementById("key-status-box");
+  if (k) { box.style.display="block"; document.getElementById("key-masked").textContent = "sk-ant-..."+k.slice(-6); }
+  else { box.style.display="none"; }
+  document.getElementById("key-error").textContent = "";
+  document.getElementById("key-input").value = "";
+  document.getElementById("key-overlay").classList.remove("hidden");
+}
+
+function closeKeyPanel(e) {
+  if (!e || e.target === document.getElementById("key-overlay"))
+    document.getElementById("key-overlay").classList.add("hidden");
+}
+
+function toggleKeyVisibility() {
+  const inp = document.getElementById("key-input");
+  const btn = inp.nextElementSibling;
+  if (inp.type === "password") { inp.type = "text"; btn.textContent = "隱藏"; }
+  else { inp.type = "password"; btn.textContent = "顯示"; }
+}
+
+function saveKey() {
+  const val = document.getElementById("key-input").value.trim();
+  if (!val.startsWith("sk-ant-")) {
+    document.getElementById("key-error").textContent = "⚠ 格式不對，金鑰應以 sk-ant- 開頭";
+    return;
+  }
+  setKey(val);
+  updateKeyBtn();
+  document.getElementById("key-overlay").classList.add("hidden");
+}
+
+function clearKey() {
+  setKey("");
+  updateKeyBtn();
+  document.getElementById("key-overlay").classList.add("hidden");
+}
+
+// Article detail
+function openDetail(idx, autoAnalyze) {
+  const list = window._displayed || [];
+  const a = list[idx];
+  if (!a) return;
+  currentArticle = a;
+  document.getElementById("detail-source").textContent = a.sname;
+  document.getElementById("detail-source").style.color = a.color;
+  document.getElementById("detail-title").textContent = a.title;
+  document.getElementById("detail-desc").textContent = a.desc || "";
+  document.getElementById("detail-desc").style.display = a.desc ? "block" : "none";
+  document.getElementById("ai-content").innerHTML = `<div class="ai-placeholder">${getKey() ? "點擊下方按鈕開始分析" : "⚠️ 請先設定 API 金鑰"}</div>`;
+  document.getElementById("analyze-btn").textContent = "✦ 開始 AI 分析";
+  document.getElementById("analyze-btn").disabled = false;
+  const lnk = document.getElementById("detail-link");
+  if (a.link) { lnk.href = a.link; lnk.style.display = "block"; }
+  else { lnk.style.display = "none"; }
+  document.getElementById("detail-overlay").classList.remove("hidden");
+  if (autoAnalyze) analyzeArticle();
+}
+
+function closeDetail(e) {
+  if (!e || e.target === document.getElementById("detail-overlay"))
+    document.getElementById("detail-overlay").classList.add("hidden");
+}
+
+async function analyzeArticle() {
+  const key = getKey();
+  if (!key) { openKeyPanel(); return; }
+  const a = currentArticle;
+  if (!a) return;
+  const btn = document.getElementById("analyze-btn");
+  btn.disabled = true;
+  btn.textContent = "分析中...";
+  document.getElementById("ai-content").innerHTML = `<div style="display:flex;align-items:center;gap:8px;color:#555"><span class="spinner"></span>分析中，請稍候...</div>`;
+  try {
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": key,
+        "anthropic-version": "2023-06-01",
+        "anthropic-dangerous-direct-browser-access": "true",
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 1000,
+        system: "你是一位財經新聞分析師。請用繁體中文，以條列式分析新聞的：1) 核心事件（1句），2) 可能影響（2-3點），3) 投資人需注意（1-2點）。語氣專業簡潔。",
+        messages: [{ role: "user", content: `請分析這則新聞：\n標題：${a.title}\n內文：${a.desc}` }],
+      }),
+    });
+    const data = await res.json();
+    if (data.error) {
+      document.getElementById("ai-content").innerHTML = `<div class="ai-result" style="color:#C85A5A">❌ 錯誤：${data.error.message}\n\n請確認 API 金鑰是否正確有效。</div>`;
+    } else {
+      const text = data.content?.[0]?.text || "無法取得分析結果";
+      document.getElementById("ai-content").innerHTML = `<div class="ai-result">${text.replace(/</g,"&lt;").replace(/\n/g,"<br>")}</div>`;
+    }
+  } catch(e) {
+    document.getElementById("ai-content").innerHTML = `<div class="ai-result" style="color:#C85A5A">❌ 網路錯誤：${e.message}</div>`;
+  }
+  btn.disabled = false;
+  btn.textContent = "🔄 重新分析";
+}
+
+// Boot
+updateKeyBtn();
+buildTabs();
+renderArticles();
+loadAll();
+</script>
+</body>
+</html>
