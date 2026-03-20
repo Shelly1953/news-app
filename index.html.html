@@ -167,33 +167,53 @@
 
 <script>
 const SOURCES = [
-  { id: "bbc", name: "BBC 中文", icon: "🇬🇧", color: "#BB1919", url: "https://api.rss2json.com/v1/api.json?rss_url=https://feeds.bbci.co.uk/zhongwen/trad/rss.xml" },
-  { id: "edn", name: "經濟日報", icon: "📰", color: "#1A4A8A", url: "https://api.rss2json.com/v1/api.json?rss_url=https://money.udn.com/rssfeed/news/1001/5591/rss2.rss" },
+  { id: "bbc", name: "BBC", icon: "🇬🇧", color: "#BB1919", url: "https://api.rss2json.com/v1/api.json?rss_url=https://feeds.bbci.co.uk/news/world/rss.xml" },
+  { id: "cnn", name: "CNN", icon: "📡", color: "#CC0000", url: "https://api.rss2json.com/v1/api.json?rss_url=http://rss.cnn.com/rss/edition.rss" },
+  { id: "reuters", name: "Reuters", icon: "🔵", color: "#FF6200", url: "https://api.rss2json.com/v1/api.json?rss_url=https://feeds.reuters.com/reuters/topNews" },
+  { id: "ap", name: "AP News", icon: "📰", color: "#C41E3A", url: "https://api.rss2json.com/v1/api.json?rss_url=https://feeds.apnews.com/rss/apf-topnews" },
+  { id: "techcrunch", name: "TechCrunch", icon: "🚀", color: "#0A8A00", url: "https://api.rss2json.com/v1/api.json?rss_url=https://techcrunch.com/feed/" },
+  { id: "verge", name: "The Verge", icon: "⚡", color: "#E5164A", url: "https://api.rss2json.com/v1/api.json?rss_url=https://www.theverge.com/rss/index.xml" },
+  { id: "nikkeiasia", name: "Nikkei Asia", icon: "🗾", color: "#D4002A", url: "https://api.rss2json.com/v1/api.json?rss_url=https://asia.nikkei.com/rss/feed/nar" },
+  { id: "edn", name: "經濟日報", icon: "📊", color: "#1A4A8A", url: "https://api.rss2json.com/v1/api.json?rss_url=https://money.udn.com/rssfeed/news/1001/5591/rss2.rss" },
   { id: "ctee", name: "工商時報", icon: "💼", color: "#0D6B3E", url: "https://api.rss2json.com/v1/api.json?rss_url=https://ctee.com.tw/feed" },
-  { id: "nikkei", name: "日經中文", icon: "🗾", color: "#D4002A", url: "https://api.rss2json.com/v1/api.json?rss_url=https://zh.cn.nikkei.com/rss/all-cn.rss" },
-  { id: "reuters", name: "路透社", icon: "🌐", color: "#FF6200", url: "https://api.rss2json.com/v1/api.json?rss_url=https://feeds.reuters.com/reuters/CNtopNews" },
+  { id: "nikkei", name: "日經中文", icon: "🇯🇵", color: "#C4002A", url: "https://api.rss2json.com/v1/api.json?rss_url=https://zh.cn.nikkei.com/rss/all-cn.rss" },
 ];
 
 const MOCK = {
   bbc: [
-    { title: "全球央行政策分歧加劇，美聯儲維持利率不變", desc: "美國聯準會在最新會議中決定維持基準利率，與部分歐洲央行降息形成對比，引發市場對全球貨幣政策走向的討論。", date: new Date(), link: null, sid: "bbc", sname: "BBC 中文", color: "#BB1919" },
-    { title: "台灣半導體出口創歷史新高", desc: "台灣積體電路製造商公布最新出口數據，在AI晶片需求強勁帶動下，半導體出口額再創新高紀錄。", date: new Date(Date.now()-3600000), link: null, sid: "bbc", sname: "BBC 中文", color: "#BB1919" },
-    { title: "日本GDP數據優於預期，日圓走強", desc: "日本最新公布的GDP成長數字超過市場預期，帶動日圓兌美元匯率走升，出口商股票普遍下跌。", date: new Date(Date.now()-7200000), link: null, sid: "bbc", sname: "BBC 中文", color: "#BB1919" },
+    { title: "Global markets rally as inflation data eases", desc: "Stock markets rose sharply after new data showed inflation cooling faster than expected, raising hopes for interest rate cuts.", date: new Date(), link: "#", sid: "bbc", sname: "BBC", color: "#BB1919" },
+    { title: "Taiwan semiconductor exports hit record high", desc: "Taiwan's chipmakers report record export figures driven by surging AI chip demand from major tech companies.", date: new Date(Date.now()-3600000), link: "#", sid: "bbc", sname: "BBC", color: "#BB1919" },
   ],
-  edn: [
-    { title: "台股加權指數衝破兩萬點大關", desc: "在外資持續買超與科技股帶動下，台灣加權股價指數突破兩萬點整數關卡，創近期新高。", date: new Date(Date.now()-1800000), link: null, sid: "edn", sname: "經濟日報", color: "#1A4A8A" },
-    { title: "房市管制新措施上路，交易量明顯萎縮", desc: "政府針對房地產市場推出的新一輪管制措施正式實施，市場觀望氣氛濃厚，短期交易量大幅下滑。", date: new Date(Date.now()-5400000), link: null, sid: "edn", sname: "經濟日報", color: "#1A4A8A" },
-  ],
-  ctee: [
-    { title: "AI伺服器需求爆發，台廠接單滿載", desc: "受惠於全球AI基礎建設投資熱潮，台灣伺服器製造商訂單能見度已延伸至明年下半年，產能嚴重供不應求。", date: new Date(Date.now()-2700000), link: null, sid: "ctee", sname: "工商時報", color: "#0D6B3E" },
-    { title: "能源轉型加速，離岸風電建置目標上調", desc: "政府宣布調高離岸風力發電建置目標，相關設備商與工程公司股價聞訊上漲，市場預期長線商機龐大。", date: new Date(Date.now()-6300000), link: null, sid: "ctee", sname: "工商時報", color: "#0D6B3E" },
-  ],
-  nikkei: [
-    { title: "日本企業海外投資再創新高，亞洲布局持續擴大", desc: "受日本國內市場飽和與勞動成本考量，日本大型企業加速海外直接投資，東南亞與台灣為主要目的地。", date: new Date(Date.now()-4500000), link: null, sid: "nikkei", sname: "日經中文", color: "#D4002A" },
+  cnn: [
+    { title: "Fed signals possible rate pause amid economic uncertainty", desc: "Federal Reserve officials suggest a pause in rate hikes may be warranted as economic indicators send mixed signals.", date: new Date(Date.now()-1800000), link: "#", sid: "cnn", sname: "CNN", color: "#CC0000" },
+    { title: "Oil prices volatile as Middle East tensions rise", desc: "Crude oil futures swing sharply as geopolitical tensions in the Middle East raise supply concerns among traders.", date: new Date(Date.now()-5400000), link: "#", sid: "cnn", sname: "CNN", color: "#CC0000" },
   ],
   reuters: [
-    { title: "油價因中東局勢緊張而波動", desc: "中東地區地緣政治緊張情勢升溫，國際原油期貨價格劇烈波動，市場密切關注後續發展對供應鏈的衝擊。", date: new Date(Date.now()-9000000), link: null, sid: "reuters", sname: "路透社", color: "#FF6200" },
-    { title: "美中科技戰升級，晶片出口管制擴大", desc: "美國商務部宣布擴大對中國的半導體出口管制範圍，預計將影響多家跨國企業在華業務。", date: new Date(Date.now()-10800000), link: null, sid: "reuters", sname: "路透社", color: "#FF6200" },
+    { title: "Asian stocks climb on rate cut hopes", desc: "Equities across Asia advanced after U.S. inflation data bolstered expectations that the Federal Reserve could cut rates soon.", date: new Date(Date.now()-2700000), link: "#", sid: "reuters", sname: "Reuters", color: "#FF6200" },
+    { title: "China factory output beats forecasts", desc: "China's manufacturing sector expanded more than expected in the latest reading, signaling resilience despite global headwinds.", date: new Date(Date.now()-7200000), link: "#", sid: "reuters", sname: "Reuters", color: "#FF6200" },
+  ],
+  ap: [
+    { title: "US economy adds more jobs than expected", desc: "The latest nonfarm payrolls report surprised analysts with stronger-than-expected job creation, complicating the Fed's rate path.", date: new Date(Date.now()-3600000), link: "#", sid: "ap", sname: "AP News", color: "#C41E3A" },
+  ],
+  techcrunch: [
+    { title: "OpenAI releases new reasoning model", desc: "OpenAI's latest model shows significant improvements in complex reasoning tasks, widening the gap with competitors.", date: new Date(Date.now()-4500000), link: "#", sid: "techcrunch", sname: "TechCrunch", color: "#0A8A00" },
+    { title: "Startup raises $200M for AI infrastructure", desc: "A Silicon Valley startup focused on AI compute infrastructure closed a massive funding round led by top-tier venture firms.", date: new Date(Date.now()-9000000), link: "#", sid: "techcrunch", sname: "TechCrunch", color: "#0A8A00" },
+  ],
+  verge: [
+    { title: "Apple unveils major iOS update with AI features", desc: "Apple's upcoming iOS release brings deep AI integration across core apps, powered by on-device models and cloud processing.", date: new Date(Date.now()-5400000), link: "#", sid: "verge", sname: "The Verge", color: "#E5164A" },
+  ],
+  nikkeiasia: [
+    { title: "Japan's chip investment drives supply chain shift", desc: "Major semiconductor investments in Japan are reshaping Asia's tech supply chain as companies diversify away from China.", date: new Date(Date.now()-6300000), link: "#", sid: "nikkeiasia", sname: "Nikkei Asia", color: "#D4002A" },
+  ],
+  edn: [
+    { title: "台股加權指數衝破兩萬點大關", desc: "在外資持續買超與科技股帶動下，台灣加權股價指數突破兩萬點整數關卡，創近期新高。", date: new Date(Date.now()-1800000), link: "#", sid: "edn", sname: "經濟日報", color: "#1A4A8A" },
+    { title: "房市管制新措施上路，交易量明顯萎縮", desc: "政府針對房地產市場推出的新一輪管制措施正式實施，市場觀望氣氛濃厚，短期交易量大幅下滑。", date: new Date(Date.now()-5400000), link: "#", sid: "edn", sname: "經濟日報", color: "#1A4A8A" },
+  ],
+  ctee: [
+    { title: "AI伺服器需求爆發，台廠接單滿載", desc: "受惠於全球AI基礎建設投資熱潮，台灣伺服器製造商訂單能見度已延伸至明年下半年，產能嚴重供不應求。", date: new Date(Date.now()-2700000), link: "#", sid: "ctee", sname: "工商時報", color: "#0D6B3E" },
+  ],
+  nikkei: [
+    { title: "日本企業海外投資再創新高，亞洲布局持續擴大", desc: "受日本國內市場飽和與勞動成本考量，日本大型企業加速海外直接投資，東南亞與台灣為主要目的地。", date: new Date(Date.now()-4500000), link: "#", sid: "nikkei", sname: "日經中文", color: "#C4002A" },
   ],
 };
 
@@ -251,7 +271,7 @@ function renderArticles() {
       ${a.desc ? `<div class="card-desc">${a.desc}…</div>` : ""}
       <div class="card-actions">
         <button class="ai-btn" onclick="event.stopPropagation();openDetail(${i},true)">✦ AI 分析</button>
-        ${a.link ? `<a class="orig-link" href="${a.link}" target="_blank" onclick="event.stopPropagation()">原文 →</a>` : ""}
+        ${a.link && a.link !== "#" ? `<a class="orig-link" href="${a.link}" target="_blank" onclick="event.stopPropagation()">原文 →</a>` : ""}
       </div>
     </div>
   `).join("");
