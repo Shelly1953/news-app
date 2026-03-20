@@ -4,6 +4,11 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>財經要聞</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="財經要聞">
+<meta name="theme-color" content="#0F0F12">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%230F0F12' rx='20'/><text y='.9em' font-size='80' x='10'>📰</text></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;700&display=swap" rel="stylesheet" />
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -308,7 +313,7 @@ async function fetchSource(s) {
         title: item.title,
         desc: stripHtml(item.description||item.content||""),
         date: new Date(item.pubDate),
-        link: item.link,
+        link: (item.link && item.link.startsWith("http") && !item.link.includes("index")) ? item.link : null,
         sid: s.id, sname: s.name, color: s.color,
       }));
     } else {
@@ -385,7 +390,8 @@ function openDetail(idx, autoAnalyze) {
   currentArticle = a;
   document.getElementById("detail-source").textContent = a.sname;
   document.getElementById("detail-source").style.color = a.color;
-  document.getElementById("detail-title").textContent = a.title;
+  const titleEl = document.getElementById("detail-title");
+  titleEl.innerHTML = a.title + (a.zhTitle ? `<div style="font-size:clamp(14px,3.5vw,16px);color:#7EB8E8;font-weight:400;margin-top:8px;line-height:1.6;">📌 ${a.zhTitle}</div>` : "");
   document.getElementById("detail-desc").textContent = a.desc || "";
   document.getElementById("detail-desc").style.display = a.desc ? "block" : "none";
   if (a._aiCache) {
