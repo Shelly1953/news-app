@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="財經要聞">
 <meta name="theme-color" content="#0F0F12">
-<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%230C0C10'/%3E%3Cline x1='19' y1='84' x2='44' y2='16' stroke='%231E3A5A' stroke-width='11' stroke-linecap='round'/%3E%3Cline x1='39' y1='84' x2='64' y2='16' stroke='%232A5A8A' stroke-width='11' stroke-linecap='round'/%3E%3Cline x1='59' y1='84' x2='84' y2='16' stroke='%235A8AAA' stroke-width='11' stroke-linecap='round'/%3E%3Cline x1='19' y1='84' x2='44' y2='16' stroke='%23C8A84A' stroke-width='1.5' stroke-linecap='round' opacity='.7'/%3E%3Ccircle cx='81' cy='20' r='5' fill='%23C8A84A'/%3E%3Ccircle cx='81' cy='20' r='2.5' fill='%230C0C10'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="/icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;700&display=swap" rel="stylesheet" />
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -177,17 +177,17 @@
 
 <script>
 const SOURCES = [
-  { id: "bbc", name: "BBC", icon: "🇬🇧", color: "#BB1919", url: "https://api.rss2json.com/v1/api.json?rss_url=https://feeds.bbci.co.uk/news/world/rss.xml" },
-  { id: "cnn-biz", name: "CNN Business", icon: "📡", color: "#CC0000", url: "https://api.rss2json.com/v1/api.json?rss_url=https://rss.cnn.com/rss/money_news_international.rss" },
-  { id: "cnn-world", name: "CNN World", icon: "🌍", color: "#AA0000", url: "https://api.rss2json.com/v1/api.json?rss_url=https://rss.cnn.com/rss/edition_world.rss" },
-  { id: "reuters", name: "Reuters", icon: "🔵", color: "#FF6200", url: "https://api.rss2json.com/v1/api.json?rss_url=https://feeds.reuters.com/reuters/topNews" },
-  { id: "ap", name: "AP News", icon: "📰", color: "#C41E3A", url: "https://api.rss2json.com/v1/api.json?rss_url=https://feeds.apnews.com/rss/apf-topnews" },
-  { id: "techcrunch", name: "TechCrunch", icon: "🚀", color: "#0A8A00", url: "https://api.rss2json.com/v1/api.json?rss_url=https://techcrunch.com/feed/" },
-  { id: "verge", name: "The Verge", icon: "⚡", color: "#E5164A", url: "https://api.rss2json.com/v1/api.json?rss_url=https://www.theverge.com/rss/index.xml" },
-  { id: "nikkeiasia", name: "Nikkei Asia", icon: "🗾", color: "#D4002A", url: "https://api.rss2json.com/v1/api.json?rss_url=https://asia.nikkei.com/rss/feed/nar" },
-  { id: "edn", name: "經濟日報", icon: "📊", color: "#1A4A8A", url: "https://api.rss2json.com/v1/api.json?rss_url=https://money.udn.com/rssfeed/news/1001/5591/rss2.rss" },
-  { id: "ctee", name: "工商時報", icon: "💼", color: "#0D6B3E", url: "https://api.rss2json.com/v1/api.json?rss_url=https://ctee.com.tw/feed" },
-  { id: "nikkei", name: "日經中文", icon: "🇯🇵", color: "#C4002A", url: "https://api.rss2json.com/v1/api.json?rss_url=https://zh.cn.nikkei.com/rss/all-cn.rss" },
+  { id: "bbc", name: "BBC", icon: "🇬🇧", color: "#BB1919", url: "/api/rss?url=https://feeds.bbci.co.uk/news/world/rss.xml" },
+  { id: "cnn-biz", name: "CNN Business", icon: "📡", color: "#CC0000", url: "/api/rss?url=https://rss.cnn.com/rss/money_news_international.rss" },
+  { id: "cnn-world", name: "CNN World", icon: "🌍", color: "#AA0000", url: "/api/rss?url=https://rss.cnn.com/rss/edition_world.rss" },
+  { id: "reuters", name: "Reuters", icon: "🔵", color: "#FF6200", url: "/api/rss?url=https://feeds.reuters.com/reuters/topNews" },
+  { id: "ap", name: "AP News", icon: "📰", color: "#C41E3A", url: "/api/rss?url=https://feeds.apnews.com/rss/apf-topnews" },
+  { id: "techcrunch", name: "TechCrunch", icon: "🚀", color: "#0A8A00", url: "/api/rss?url=https://techcrunch.com/feed/" },
+  { id: "verge", name: "The Verge", icon: "⚡", color: "#E5164A", url: "/api/rss?url=https://www.theverge.com/rss/index.xml" },
+  { id: "nikkeiasia", name: "Nikkei Asia", icon: "🗾", color: "#D4002A", url: "/api/rss?url=https://asia.nikkei.com/rss/feed/nar" },
+  { id: "edn", name: "經濟日報", icon: "📊", color: "#1A4A8A", url: "/api/rss?url=https://money.udn.com/rssfeed/news/1001/5591/rss2.rss" },
+  { id: "ctee", name: "工商時報", icon: "💼", color: "#0D6B3E", url: "/api/rss?url=https://ctee.com.tw/feed" },
+  { id: "nikkei", name: "日經中文", icon: "🇯🇵", color: "#C4002A", url: "/api/rss?url=https://zh.cn.nikkei.com/rss/all-cn.rss" },
 ];
 
 const MOCK = {
@@ -309,7 +309,7 @@ async function fetchSource(s) {
     const r = await fetch(s.url);
     const d = await r.json();
     if (d.items && d.items.length > 0) {
-      allNews[s.id] = d.items.slice(0,5).map(item=>({
+      allNews[s.id] = d.items.slice(0,8).map(item=>({
         title: item.title,
         desc: stripHtml(item.description||item.content||""),
         date: new Date(item.pubDate),
