@@ -12,8 +12,8 @@
   ::-webkit-scrollbar-thumb { background: #444; border-radius: 2px; }
 
   header { position: sticky; top: 0; z-index: 50; background: #0F0F12; border-bottom: 1px solid #1E1E25; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; }
-  header h1 { font-size: 24px; font-weight: 700; color: #F0EFE8; }
-  header p { font-size: 12px; color: #444; margin-top: 3px; }
+  header h1 { font-size: clamp(18px, 5vw, 26px); font-weight: 700; color: #F0EFE8; }
+  header p { font-size: clamp(11px, 3vw, 13px); color: #444; margin-top: 3px; }
 
   .key-btn { padding: 8px 14px; border-radius: 6px; border: 1px solid #3A2A1A; background: #1F1008; color: #C8884A; cursor: pointer; font-size: 13px; font-family: inherit; transition: all 0.2s; }
   .key-btn.set { border-color: #1A4A2A; background: #0A1F12; color: #5EC87A; }
@@ -35,8 +35,8 @@
   .card-meta { display: flex; justify-content: space-between; margin-bottom: 8px; }
   .card-source { font-size: 12px; font-family: sans-serif; font-weight: 700; letter-spacing: 0.04em; }
   .card-time { font-size: 12px; color: #3A3A3A; font-family: sans-serif; }
-  .card-title { font-size: 17px; line-height: 1.65; color: #DDDCD5; font-weight: 600; margin-bottom: 8px; }
-  .card-desc { font-size: 15px; color: #5A5A5A; line-height: 1.75; }
+  .card-title { font-size: clamp(16px, 4vw, 19px); line-height: 1.65; color: #DDDCD5; font-weight: 600; margin-bottom: 8px; }
+  .card-desc { font-size: clamp(14px, 3.5vw, 16px); color: #5A5A5A; line-height: 1.75; }
   .card-actions { margin-top: 12px; display: flex; gap: 8px; align-items: center; }
 
   .ai-btn { padding: 9px 18px; background: linear-gradient(135deg, #1A3A5C, #0D2A45); border: 1px solid #2A4A6C; border-radius: 6px; color: #7EB8E8; cursor: pointer; font-family: inherit; font-size: 15px; transition: all 0.2s; }
@@ -70,11 +70,16 @@
   .save-btn:hover { background: #1E4570; }
 
   .detail-source { font-size: 13px; font-family: sans-serif; font-weight: 700; }
-  .detail-title { font-size: 20px; line-height: 1.65; margin-bottom: 16px; color: #F0EFE8; }
-  .detail-desc { font-size: 15px; color: #5A5A5A; line-height: 1.8; margin-bottom: 20px; border-bottom: 1px solid #1E1E25; padding-bottom: 20px; }
+  .detail-title { font-size: clamp(17px, 4.5vw, 22px); line-height: 1.65; margin-bottom: 16px; color: #F0EFE8; }
+  .detail-desc { font-size: clamp(14px, 3.5vw, 16px); color: #7A7A7A; line-height: 1.8; margin-bottom: 20px; border-bottom: 1px solid #1E1E25; padding-bottom: 20px; }
   .ai-box { background: #0C1620; border: 1px solid #1A2A3A; border-radius: 8px; padding: 18px; margin-bottom: 14px; }
   .ai-box-label { font-size: 13px; color: #7EB8E8; margin-bottom: 12px; font-family: sans-serif; letter-spacing: 0.05em; }
-  .ai-result { font-size: 15px; line-height: 1.95; color: #A8B8C8; white-space: pre-wrap; }
+  .ai-result { font-size: clamp(14px, 3.5vw, 16px); line-height: 2; color: #D8E8F0; }
+  .ai-result h3 { color: #7EB8E8; font-size: clamp(14px, 3.5vw, 16px); margin: 14px 0 6px; }
+  .ai-result strong { color: #E8F0F8; font-weight: 700; }
+  .ai-result ul, .ai-result ol { padding-left: 20px; margin: 6px 0; }
+  .ai-result li { margin: 5px 0; color: #D8E8F0; }
+  .ai-result p { margin: 8px 0; }
   .ai-placeholder { color: #3A3A3A; font-size: 14px; }
   .spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid #333; border-top-color: #7EB8E8; border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; margin-right: 8px; }
   .orig-btn { display: block; text-align: center; padding: 10px; border: 1px solid #222; border-radius: 6px; color: #666; font-size: 14px; text-decoration: none; margin-top: 10px; }
@@ -355,6 +360,20 @@ function closeDetail(e) {
     document.getElementById("detail-overlay").classList.add("hidden");
 }
 
+function renderMd(text) {
+  return text
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+    .replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>")
+    .replace(/^### (.+)$/gm,"<h3>$1</h3>")
+    .replace(/^## (.+)$/gm,"<h3>$1</h3>")
+    .replace(/^# (.+)$/gm,"<h3>$1</h3>")
+    .replace(/^[-*] (.+)$/gm,"<li>$1</li>")
+    .replace(/^\d+\. (.+)$/gm,"<li>$1</li>")
+    .replace(/(<li>.*<\/li>\n?)+/g, s => "<ul>"+s+"</ul>")
+    .replace(/\n\n/g,"</p><p>")
+    .replace(/\n/g,"<br>");
+}
+
 async function analyzeArticle() {
   const key = getKey();
   if (!key) { openKeyPanel(); return; }
@@ -385,7 +404,7 @@ async function analyzeArticle() {
       document.getElementById("ai-content").innerHTML = `<div class="ai-result" style="color:#C85A5A">❌ 錯誤：${data.error.message}\n\n請確認 API 金鑰是否正確有效。</div>`;
     } else {
       const text = data.content?.[0]?.text || "無法取得分析結果";
-      document.getElementById("ai-content").innerHTML = `<div class="ai-result">${text.replace(/</g,"&lt;").replace(/\n/g,"<br>")}</div>`;
+      document.getElementById("ai-content").innerHTML = `<div class="ai-result">${renderMd(text)}</div>`;
     }
   } catch(e) {
     document.getElementById("ai-content").innerHTML = `<div class="ai-result" style="color:#C85A5A">❌ 網路錯誤：${e.message}</div>`;
