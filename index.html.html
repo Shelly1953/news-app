@@ -89,6 +89,10 @@
   @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
 
   .loading-spinner { display: flex; align-items: center; gap: 8px; color: #555; font-size: 13px; }
+  .lang-btn { padding: 3px 9px; border-radius: 12px; border: 1px solid #2A2A32; background: transparent; color: #666; cursor: pointer; font-size: 11px; font-family: sans-serif; transition: all 0.2s; flex-shrink: 0; }
+  .lang-btn:hover { border-color: #7EB8E8; color: #7EB8E8; }
+  .lang-btn.loading { opacity: 0.5; cursor: wait; }
+  .lang-btn.translated { border-color: #7EB8E8; color: #7EB8E8; background: #0C1A28; }
 </style>
 </head>
 <body>
@@ -261,21 +265,30 @@ function renderArticles() {
   const list = getDisplayed();
   document.getElementById("count").textContent = `共 ${list.length} 則新聞`;
   const el = document.getElementById("articles");
-  el.innerHTML = list.map((a,i) => `
+  el.innerHTML = list.map((a,i) => {
+    const isChinese = /[\u4e00-\u9fff]/.test(a.title);
+    const showLang = !isChinese;
+    const isTranslated = a.zhLang && a._showZh;
+    const title = isTranslated ? a.zhTitle : a.title;
+    const desc = isTranslated ? a.zhDesc : a.desc;
+    const langLabel = isTranslated ? "EN" : "中";
+    return `
     <div class="card" style="--sc:${a.color}" onclick="openDetail(${i})">
       <div class="card-meta">
         <span class="card-source" style="color:${a.color}">${a.sname}</span>
-        <span class="card-time">${timeAgo(a.date)}</span>
+        <div style="display:flex;align-items:center;gap:8px;">
+          ${showLang ? `<button class="lang-btn ${a.zhLang?'translated':''} ${a._translating?'loading':''}" onclick="event.stopPropagation();toggleLang(${i})">${a._translating ? '...' : langLabel}</button>` : ''}
+          <span class="card-time">${timeAgo(a.date)}</span>
+        </div>
       </div>
-      <div class="card-title">${a.title}</div>
-      ${a.desc ? `<div class="card-desc">${a.desc}…</div>` : ""}
+      <div class="card-title">${title}</div>
+      ${desc ? `<div class="card-desc">${desc}…</div>` : ""}
       <div class="card-actions">
         <button class="ai-btn" onclick="event.stopPropagation();openDetail(${i},true)">✦ AI 分析</button>
         ${a.link && a.link !== "#" ? `<a class="orig-link" href="${a.link}" target="_blank" onclick="event.stopPropagation()">原文 →</a>` : ""}
       </div>
-    </div>
-  `).join("");
-  // Store reference for detail
+    </div>`;
+  }).join("");
   window._displayed = list;
 }
 
@@ -392,6 +405,59 @@ function renderMd(text) {
     .replace(/(<li>.*<\/li>\n?)+/g, s => "<ul>"+s+"</ul>")
     .replace(/\n\n/g,"</p><p>")
     .replace(/\n/g,"<br>");
+}
+
+async function toggleLang(idx) {
+  const list = window._displayed || [];
+  const a = list[idx];
+  if (!a) return;
+
+  // If already translated, just toggle display
+  if (a.zhLang) {
+    a._showZh = !a._showZh;
+    renderArticles();
+    return;
+  }
+
+  // Need to translate
+  const key = getKey();
+  if (!key) { openKeyPanel(); return; }
+
+  a._translating = true;
+  renderArticles();
+
+  try {
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": key,
+        "anthropic-version": "2023-06-01",
+        "anthropic-dangerous-direct-browser-access": "true",
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 400,
+        system: "你是翻譯助理。請將英文標題和摘要翻譯成自然流暢的繁體中文。只回傳JSON格式，不要其他文字：{\"title\":\"...\",\"desc\":\"...\"}",
+        messages: [{ role: "user", content: `標題：${a.title}\n摘要：${a.desc || ""}` }],
+      }),
+    });
+    const data = await res.json();
+    const text = data.content?.[0]?.text || "{}";
+    const clean = text.replace(/```json|```/g,"").trim();
+    const parsed = JSON.parse(clean);
+    a.zhTitle = parsed.title || a.title;
+    a.zhDesc = parsed.desc || a.desc;
+    a.zhLang = true;
+    a._showZh = true;
+  } catch {
+    a.zhTitle = a.title;
+    a.zhDesc = a.desc;
+    a.zhLang = true;
+    a._showZh = false;
+  }
+  a._translating = false;
+  renderArticles();
 }
 
 async function analyzeArticle() {
