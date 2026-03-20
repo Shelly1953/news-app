@@ -36,7 +36,7 @@
   .card-source { font-size: 12px; font-family: sans-serif; font-weight: 700; letter-spacing: 0.04em; }
   .card-time { font-size: 12px; color: #3A3A3A; font-family: sans-serif; }
   .card-title { font-size: clamp(16px, 4vw, 19px); line-height: 1.65; color: #DDDCD5; font-weight: 600; margin-bottom: 8px; }
-  .card-desc { font-size: clamp(14px, 3.5vw, 16px); color: #5A5A5A; line-height: 1.75; }
+  .card-desc { font-size: clamp(14px, 3.5vw, 16px); color: #9A9A9A; line-height: 1.75; }
   .card-actions { margin-top: 12px; display: flex; gap: 8px; align-items: center; }
 
   .ai-btn { padding: 9px 18px; background: linear-gradient(135deg, #1A3A5C, #0D2A45); border: 1px solid #2A4A6C; border-radius: 6px; color: #7EB8E8; cursor: pointer; font-family: inherit; font-size: 15px; transition: all 0.2s; }
@@ -89,6 +89,7 @@
   @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
 
   .loading-spinner { display: flex; align-items: center; gap: 8px; color: #555; font-size: 13px; }
+  .card-zh-title { font-size: clamp(13px, 3.5vw, 15px); color: #7EB8E8; line-height: 1.6; margin-top: 5px; margin-bottom: 6px; font-weight: 400; }
   .lang-btn { padding: 3px 9px; border-radius: 12px; border: 1px solid #2A2A32; background: transparent; color: #666; cursor: pointer; font-size: 11px; font-family: sans-serif; transition: all 0.2s; flex-shrink: 0; }
   .lang-btn:hover { border-color: #7EB8E8; color: #7EB8E8; }
   .lang-btn.loading { opacity: 0.5; cursor: wait; }
@@ -267,21 +268,22 @@ function renderArticles() {
   const el = document.getElementById("articles");
   el.innerHTML = list.map((a,i) => {
     const isChinese = /[\u4e00-\u9fff]/.test(a.title);
-    const showLang = !isChinese;
-    const isTranslated = a.zhLang && a._showZh;
-    const title = isTranslated ? a.zhTitle : a.title;
-    const desc = isTranslated ? a.zhDesc : a.desc;
-    const langLabel = isTranslated ? "EN" : "中";
+    const isEng = !isChinese;
+    const descTranslated = a.zhLang && a._showZh;
+    const desc = descTranslated ? a.zhDesc : a.desc;
+    const descLabel = descTranslated ? "EN摘要" : "中文摘要";
     return `
     <div class="card" style="--sc:${a.color}" onclick="openDetail(${i})">
       <div class="card-meta">
         <span class="card-source" style="color:${a.color}">${a.sname}</span>
         <div style="display:flex;align-items:center;gap:8px;">
-          ${showLang ? `<button class="lang-btn ${a.zhLang?'translated':''} ${a._translating?'loading':''}" onclick="event.stopPropagation();toggleLang(${i})">${a._translating ? '...' : langLabel}</button>` : ''}
+          ${isEng && a.desc ? `<button class="lang-btn ${a.zhLang?'translated':''} ${a._translating?'loading':''}" onclick="event.stopPropagation();toggleLang(${i})">${a._translating ? '翻譯中...' : descLabel}</button>` : ''}
           <span class="card-time">${timeAgo(a.date)}</span>
         </div>
       </div>
-      <div class="card-title">${title}</div>
+      <div class="card-title">${a.title}</div>
+      ${isEng && a.zhTitle ? `<div class="card-zh-title">📌 ${a.zhTitle}</div>` : ''}
+      ${isEng && a.zhTitle === undefined && a._translatingTitle ? `<div class="card-zh-title" style="color:#444;">翻譯標題中...</div>` : ''}
       ${desc ? `<div class="card-desc">${desc}…</div>` : ""}
       <div class="card-actions">
         <button class="ai-btn" onclick="event.stopPropagation();openDetail(${i},true)">✦ AI 分析</button>
@@ -311,6 +313,9 @@ async function fetchSource(s) {
     allNews[s.id] = MOCK[s.id];
   }
   renderArticles();
+  // Auto-translate titles for English sources
+  const isChinese = /[一-鿿]/.test(s.name);
+  if (!isChinese) autoTranslateTitles(s.id);
 }
 
 function loadAll() {
@@ -407,6 +412,49 @@ function renderMd(text) {
     .replace(/\n/g,"<br>");
 }
 
+async function autoTranslateTitles(sid) {
+  const key = getKey();
+  if (!key) return; // No key, skip silently
+  const articles = allNews[sid];
+  if (!articles) return;
+  const engArticles = articles.filter(a => !/[一-鿿]/.test(a.title) && !a.zhTitle);
+  if (engArticles.length === 0) return;
+
+  // Mark as translating
+  engArticles.forEach(a => a._translatingTitle = true);
+  renderArticles();
+
+  const titles = engArticles.map((a,i) => `${i+1}. ${a.title}`).join("\n");
+  try {
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": key,
+        "anthropic-version": "2023-06-01",
+        "anthropic-dangerous-direct-browser-access": "true",
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 600,
+        system: "你是翻譯助理。將以下英文新聞標題翻譯成繁體中文。只回傳JSON陣列格式，例如：[\"翻譯1\",\"翻譯2\"]，不要其他文字。",
+        messages: [{ role: "user", content: titles }],
+      }),
+    });
+    const data = await res.json();
+    const text = data.content?.[0]?.text || "[]";
+    const clean = text.replace(/```json|```/g,"").trim();
+    const parsed = JSON.parse(clean);
+    engArticles.forEach((a, i) => {
+      a.zhTitle = parsed[i] || "";
+      a._translatingTitle = false;
+    });
+  } catch {
+    engArticles.forEach(a => { a._translatingTitle = false; });
+  }
+  renderArticles();
+}
+
 async function toggleLang(idx) {
   const list = window._displayed || [];
   const a = list[idx];
@@ -437,21 +485,16 @@ async function toggleLang(idx) {
       },
       body: JSON.stringify({
         model: "claude-sonnet-4-20250514",
-        max_tokens: 400,
-        system: "你是翻譯助理。請將英文標題和摘要翻譯成自然流暢的繁體中文。只回傳JSON格式，不要其他文字：{\"title\":\"...\",\"desc\":\"...\"}",
-        messages: [{ role: "user", content: `標題：${a.title}\n摘要：${a.desc || ""}` }],
+        max_tokens: 300,
+        system: "你是翻譯助理。只翻譯英文摘要成繁體中文。只回傳翻譯後的中文文字，不要其他說明。",
+        messages: [{ role: "user", content: a.desc || "" }],
       }),
     });
     const data = await res.json();
-    const text = data.content?.[0]?.text || "{}";
-    const clean = text.replace(/```json|```/g,"").trim();
-    const parsed = JSON.parse(clean);
-    a.zhTitle = parsed.title || a.title;
-    a.zhDesc = parsed.desc || a.desc;
+    a.zhDesc = data.content?.[0]?.text || a.desc;
     a.zhLang = true;
     a._showZh = true;
   } catch {
-    a.zhTitle = a.title;
     a.zhDesc = a.desc;
     a.zhLang = true;
     a._showZh = false;
