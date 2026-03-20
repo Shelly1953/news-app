@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="財經要聞">
 <meta name="theme-color" content="#0F0F12">
-<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%230F0F12' rx='20'/><text y='.9em' font-size='80' x='10'>📰</text></svg>">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%230C0C10'/%3E%3Cline x1='19' y1='84' x2='44' y2='16' stroke='%231E3A5A' stroke-width='11' stroke-linecap='round'/%3E%3Cline x1='39' y1='84' x2='64' y2='16' stroke='%232A5A8A' stroke-width='11' stroke-linecap='round'/%3E%3Cline x1='59' y1='84' x2='84' y2='16' stroke='%235A8AAA' stroke-width='11' stroke-linecap='round'/%3E%3Cline x1='19' y1='84' x2='44' y2='16' stroke='%23C8A84A' stroke-width='1.5' stroke-linecap='round' opacity='.7'/%3E%3Ccircle cx='81' cy='20' r='5' fill='%23C8A84A'/%3E%3Ccircle cx='81' cy='20' r='2.5' fill='%230C0C10'/%3E%3C/svg%3E">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;700&display=swap" rel="stylesheet" />
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -244,7 +244,7 @@ function timeAgo(d) {
 }
 function stripHtml(s) {
   if (!s) return "";
-  return s.replace(/<[^>]*>/g,"").replace(/&[a-z]+;/gi," ").trim().slice(0,150);
+  return s.replace(/<[^>]*>/g,"").replace(/&[a-z]+;/gi," ").trim();
 }
 function getKey() { try { return localStorage.getItem("news_html_key")||""; } catch { return ""; } }
 function setKey(k) { try { if(k) localStorage.setItem("news_html_key",k); else localStorage.removeItem("news_html_key"); } catch {} }
@@ -294,7 +294,7 @@ function renderArticles() {
       <div class="card-title">${a.title}</div>
       ${isEng && a.zhTitle ? `<div class="card-zh-title">📌 ${a.zhTitle}</div>` : ''}
       ${isEng && a.zhTitle === undefined && a._translatingTitle ? `<div class="card-zh-title" style="color:#444;">翻譯標題中...</div>` : ''}
-      ${desc ? `<div class="card-desc">${desc}…</div>` : ""}
+      ${desc ? `<div class="card-desc">${desc}</div>` : ""}
       <div class="card-actions">
         <button class="ai-btn" onclick="event.stopPropagation();openDetail(${i},true)">✦ AI 分析</button>
         ${a.link && a.link !== "#" ? `<a class="orig-link" href="${a.link}" target="_blank" onclick="event.stopPropagation()">原文 →</a>` : ""}
