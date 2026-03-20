@@ -17,30 +17,57 @@ export default async function handler(req, res) {
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const xml = await response.text();
 
-    // Parse RSS XML
     const items = [];
     const itemRegex = /<item>([\s\S]*?)<\/item>/gi;
     let itemMatch;
 
     while ((itemMatch = itemRegex.exec(xml)) !== null) {
       const item = itemMatch[1];
-      const get = (tag) => {
-        const m = item.match(new RegExp(`<${tag}[^>]*>(?:<!\\[CDATA\\[)?(.*?)(?:\\]\\]>)?<\\/${tag}>`, "si"));
-        return m ? m[1].trim() : "";
-      };
-      const getLinkFromGuid = () => {
-        const m = item.match(/<guid[^>]*isPermaLink="true"[^>]*>(.*?)<\/guid>/si);
-        return m ? m[1].trim() : "";
-      };
 
-      let link = get("link") || getLinkFromGuid() || get("guid");
-      // Clean up link - remove whitespace and CDATA artifacts
-      link = link.replace(/\s+/g, "").trim();
-      if (!link.startsWith("http")) link = "";
+      const get = (tag) => {
+        const m = item.match(new RegExp(`<${tag}[^>]*>(?:<!\\[CDATA\\[)?([\\s\\S]*?)(?:\\]\\]>)?<\\/${tag}>`, "si"));
+        return m ? m[1].trim() : "";
+      };
 
       const title = get("title");
-      const description = get("description").replace(/<[^>]*>/g, "").replace(/&[a-z]+;/gi, " ").trim();
+      const description = get("description").replace(/<[^>]*>/g, "").replace(/&[a-z#0-9]+;/gi, " ").trim();
       const pubDate = get("pubDate") || get("dc:date") || get("published");
+
+      // Try multiple link sources in priority order
+      let link = "";
+
+      // 1. <link> tag (sometimes has whitespace/newlines around it)
+      const linkMatch = item.match(/<link>([\s\S]*?)<\/link>/i);
+      if (linkMatch) link = linkMatch[1].replace(/\s+/g, "").trim();
+
+      // 2. <feedburner:origLink>
+      if (!link.startsWith("http")) {
+        const fbMatch = item.match(/<feedburner:origLink>([\s\S]*?)<\/feedburner:origLink>/i);
+        if (fbMatch) link = fbMatch[1].replace(/\s+/g, "").trim();
+      }
+
+      // 3. <guid isPermaLink="true">
+      if (!link.startsWith("http")) {
+        const guidMatch = item.match(/<guid[^>]*isPermaLink="true"[^>]*>([\s\S]*?)<\/guid>/i);
+        if (guidMatch) link = guidMatch[1].replace(/\s+/g, "").trim();
+      }
+
+      // 4. Any <guid> that looks like a URL
+      if (!link.startsWith("http")) {
+        const guidAny = item.match(/<guid[^>]*>([\s\S]*?)<\/guid>/i);
+        if (guidAny) {
+          const g = guidAny[1].replace(/\s+/g, "").trim();
+          if (g.startsWith("http")) link = g;
+        }
+      }
+
+      // 5. href in <link> atom style
+      if (!link.startsWith("http")) {
+        const atomLink = item.match(/<link[^>]+href=["']([^"']+)["']/i);
+        if (atomLink) link = atomLink[1].trim();
+      }
+
+      if (!link.startsWith("http")) link = "";
 
       if (title) {
         items.push({ title, description, pubDate, link });
