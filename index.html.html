@@ -173,7 +173,8 @@
 <script>
 const SOURCES = [
   { id: "bbc", name: "BBC", icon: "🇬🇧", color: "#BB1919", url: "https://api.rss2json.com/v1/api.json?rss_url=https://feeds.bbci.co.uk/news/world/rss.xml" },
-  { id: "cnn", name: "CNN", icon: "📡", color: "#CC0000", url: "https://api.rss2json.com/v1/api.json?rss_url=http://rss.cnn.com/rss/edition.rss" },
+  { id: "cnn-biz", name: "CNN Business", icon: "📡", color: "#CC0000", url: "https://api.rss2json.com/v1/api.json?rss_url=https://rss.cnn.com/rss/money_news_international.rss" },
+  { id: "cnn-world", name: "CNN World", icon: "🌍", color: "#AA0000", url: "https://api.rss2json.com/v1/api.json?rss_url=https://rss.cnn.com/rss/edition_world.rss" },
   { id: "reuters", name: "Reuters", icon: "🔵", color: "#FF6200", url: "https://api.rss2json.com/v1/api.json?rss_url=https://feeds.reuters.com/reuters/topNews" },
   { id: "ap", name: "AP News", icon: "📰", color: "#C41E3A", url: "https://api.rss2json.com/v1/api.json?rss_url=https://feeds.apnews.com/rss/apf-topnews" },
   { id: "techcrunch", name: "TechCrunch", icon: "🚀", color: "#0A8A00", url: "https://api.rss2json.com/v1/api.json?rss_url=https://techcrunch.com/feed/" },
@@ -189,9 +190,13 @@ const MOCK = {
     { title: "Global markets rally as inflation data eases", desc: "Stock markets rose sharply after new data showed inflation cooling faster than expected, raising hopes for interest rate cuts.", date: new Date(), link: "#", sid: "bbc", sname: "BBC", color: "#BB1919" },
     { title: "Taiwan semiconductor exports hit record high", desc: "Taiwan's chipmakers report record export figures driven by surging AI chip demand from major tech companies.", date: new Date(Date.now()-3600000), link: "#", sid: "bbc", sname: "BBC", color: "#BB1919" },
   ],
-  cnn: [
-    { title: "Fed signals possible rate pause amid economic uncertainty", desc: "Federal Reserve officials suggest a pause in rate hikes may be warranted as economic indicators send mixed signals.", date: new Date(Date.now()-1800000), link: "#", sid: "cnn", sname: "CNN", color: "#CC0000" },
-    { title: "Oil prices volatile as Middle East tensions rise", desc: "Crude oil futures swing sharply as geopolitical tensions in the Middle East raise supply concerns among traders.", date: new Date(Date.now()-5400000), link: "#", sid: "cnn", sname: "CNN", color: "#CC0000" },
+  "cnn-biz": [
+    { title: "Fed signals possible rate pause amid economic uncertainty", desc: "Federal Reserve officials suggest a pause in rate hikes may be warranted as economic indicators send mixed signals.", date: new Date(Date.now()-1800000), link: "#", sid: "cnn-biz", sname: "CNN Business", color: "#CC0000" },
+    { title: "Markets rally on inflation data", desc: "Wall Street surged after cooler-than-expected inflation data raised hopes for Federal Reserve interest rate cuts.", date: new Date(Date.now()-5400000), link: "#", sid: "cnn-biz", sname: "CNN Business", color: "#CC0000" },
+  ],
+  "cnn-world": [
+    { title: "Oil prices volatile as Middle East tensions rise", desc: "Crude oil futures swing sharply as geopolitical tensions in the Middle East raise supply concerns among traders.", date: new Date(Date.now()-3600000), link: "#", sid: "cnn-world", sname: "CNN World", color: "#AA0000" },
+    { title: "European leaders meet to discuss trade policy", desc: "EU heads of state gathered in Brussels to coordinate a response to shifting global trade dynamics.", date: new Date(Date.now()-7200000), link: "#", sid: "cnn-world", sname: "CNN World", color: "#AA0000" },
   ],
   reuters: [
     { title: "Asian stocks climb on rate cut hopes", desc: "Equities across Asia advanced after U.S. inflation data bolstered expectations that the Federal Reserve could cut rates soon.", date: new Date(Date.now()-2700000), link: "#", sid: "reuters", sname: "Reuters", color: "#FF6200" },
@@ -383,8 +388,13 @@ function openDetail(idx, autoAnalyze) {
   document.getElementById("detail-title").textContent = a.title;
   document.getElementById("detail-desc").textContent = a.desc || "";
   document.getElementById("detail-desc").style.display = a.desc ? "block" : "none";
-  document.getElementById("ai-content").innerHTML = `<div class="ai-placeholder">${getKey() ? "點擊下方按鈕開始分析" : "⚠️ 請先設定 API 金鑰"}</div>`;
-  document.getElementById("analyze-btn").textContent = "✦ 開始 AI 分析";
+  if (a._aiCache) {
+    document.getElementById("ai-content").innerHTML = `<div class="ai-result">${renderMd(a._aiCache)}</div>`;
+    document.getElementById("analyze-btn").textContent = "🔄 重新分析";
+  } else {
+    document.getElementById("ai-content").innerHTML = `<div class="ai-placeholder">${getKey() ? "點擊下方按鈕開始分析" : "⚠️ 請先設定 API 金鑰"}</div>`;
+    document.getElementById("analyze-btn").textContent = "✦ 開始 AI 分析";
+  }
   document.getElementById("analyze-btn").disabled = false;
   const lnk = document.getElementById("detail-link");
   if (a.link) { lnk.href = a.link; lnk.style.display = "block"; }
@@ -508,6 +518,15 @@ async function analyzeArticle() {
   if (!key) { openKeyPanel(); return; }
   const a = currentArticle;
   if (!a) return;
+
+  // Return cached result if available
+  if (a._aiCache) {
+    document.getElementById("ai-content").innerHTML = `<div class="ai-result">${renderMd(a._aiCache)}</div>`;
+    document.getElementById("analyze-btn").textContent = "🔄 重新分析";
+    document.getElementById("analyze-btn").disabled = false;
+    return;
+  }
+
   const btn = document.getElementById("analyze-btn");
   btn.disabled = true;
   btn.textContent = "分析中...";
@@ -533,6 +552,7 @@ async function analyzeArticle() {
       document.getElementById("ai-content").innerHTML = `<div class="ai-result" style="color:#C85A5A">❌ 錯誤：${data.error.message}\n\n請確認 API 金鑰是否正確有效。</div>`;
     } else {
       const text = data.content?.[0]?.text || "無法取得分析結果";
+      if (currentArticle) currentArticle._aiCache = text;
       document.getElementById("ai-content").innerHTML = `<div class="ai-result">${renderMd(text)}</div>`;
     }
   } catch(e) {
