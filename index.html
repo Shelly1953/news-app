@@ -121,7 +121,7 @@
 <div class="tabs" id="tabs"></div>
 
 <!-- Count -->
-<div class="count" id="count"></div>
+<div class="count" id="count" style="display:flex;justify-content:space-between;align-items:center;padding-right:16px;"></div>
 
 <!-- Articles -->
 <main><div class="articles" id="articles"></div></main>
@@ -177,17 +177,17 @@
 
 <script>
 const SOURCES = [
-  { id: "bbc", name: "BBC", icon: "🇬🇧", color: "#BB1919", url: "/api/rss?url=https://feeds.bbci.co.uk/news/world/rss.xml" },
-  { id: "cnn-biz", name: "CNN Business", icon: "📡", color: "#CC0000", url: "/api/rss?url=https://rss.cnn.com/rss/money_news_international.rss" },
-  { id: "cnn-world", name: "CNN World", icon: "🌍", color: "#AA0000", url: "/api/rss?url=https://rss.cnn.com/rss/edition_world.rss" },
-  { id: "reuters", name: "Reuters", icon: "🔵", color: "#FF6200", url: "/api/rss?url=https://feeds.reuters.com/reuters/topNews" },
-  { id: "ap", name: "AP News", icon: "📰", color: "#C41E3A", url: "/api/rss?url=https://feeds.apnews.com/rss/apf-topnews" },
-  { id: "techcrunch", name: "TechCrunch", icon: "🚀", color: "#0A8A00", url: "/api/rss?url=https://techcrunch.com/feed/" },
-  { id: "verge", name: "The Verge", icon: "⚡", color: "#E5164A", url: "/api/rss?url=https://www.theverge.com/rss/index.xml" },
-  { id: "nikkeiasia", name: "Nikkei Asia", icon: "🗾", color: "#D4002A", url: "/api/rss?url=https://asia.nikkei.com/rss/feed/nar" },
-  { id: "edn", name: "經濟日報", icon: "📊", color: "#1A4A8A", url: "/api/rss?url=https://money.udn.com/rssfeed/news/1001/5591/rss2.rss" },
-  { id: "ctee", name: "工商時報", icon: "💼", color: "#0D6B3E", url: "/api/rss?url=https://ctee.com.tw/feed" },
-  { id: "nikkei", name: "日經中文", icon: "🇯🇵", color: "#C4002A", url: "/api/rss?url=https://zh.cn.nikkei.com/rss/all-cn.rss" },
+  { id: "bbc", name: "BBC", icon: "🇬🇧", color: "#BB1919", url: "/api/rss?url=https://feeds.bbci.co.uk/news/world/rss.xml", home: "https://www.bbc.com/news" },
+  { id: "cnn-biz", name: "CNN Business", icon: "📡", color: "#CC0000", url: "/api/rss?url=https://rss.cnn.com/rss/money_news_international.rss", home: "https://edition.cnn.com/business" },
+  { id: "cnn-world", name: "CNN World", icon: "🌍", color: "#AA0000", url: "/api/rss?url=https://rss.cnn.com/rss/edition_world.rss", home: "https://edition.cnn.com/world" },
+  { id: "reuters", name: "Reuters", icon: "🔵", color: "#FF6200", url: "/api/rss?url=https://feeds.reuters.com/reuters/topNews", home: "https://www.reuters.com" },
+  { id: "ap", name: "AP News", icon: "📰", color: "#C41E3A", url: "/api/rss?url=https://feeds.apnews.com/rss/apf-topnews", home: "https://apnews.com" },
+  { id: "techcrunch", name: "TechCrunch", icon: "🚀", color: "#0A8A00", url: "/api/rss?url=https://techcrunch.com/feed/", home: "https://techcrunch.com" },
+  { id: "verge", name: "The Verge", icon: "⚡", color: "#E5164A", url: "/api/rss?url=https://www.theverge.com/rss/index.xml", home: "https://www.theverge.com" },
+  { id: "nikkeiasia", name: "Nikkei Asia", icon: "🗾", color: "#D4002A", url: "/api/rss?url=https://asia.nikkei.com/rss/feed/nar", home: "https://asia.nikkei.com" },
+  { id: "edn", name: "經濟日報", icon: "📊", color: "#1A4A8A", url: "/api/rss?url=https://money.udn.com/rssfeed/news/1001/5591/rss2.rss", home: "https://money.udn.com" },
+  { id: "ctee", name: "工商時報", icon: "💼", color: "#0D6B3E", url: "/api/rss?url=https://ctee.com.tw/feed", home: "https://ctee.com.tw" },
+  { id: "nikkei", name: "日經中文", icon: "🇯🇵", color: "#C4002A", url: "/api/rss?url=https://zh.cn.nikkei.com/rss/all-cn.rss", home: "https://zh.cn.nikkei.com" },
 ];
 
 const MOCK = {
@@ -274,7 +274,12 @@ function getDisplayed() {
 
 function renderArticles() {
   const list = getDisplayed();
-  document.getElementById("count").textContent = `共 ${list.length} 則新聞`;
+  const countEl = document.getElementById("count");
+  const activeSrc = SOURCES.find(s => s.id === activeTab);
+  const homeBtn = (activeSrc && activeTab !== "all")
+    ? `<a href="${activeSrc.home}" target="_blank" style="font-size:14px;color:#7EB8E8;text-decoration:none;border:1px solid #1A3050;padding:4px 12px;border-radius:14px;white-space:nowrap;">前往 ${activeSrc.name} →</a>`
+    : "";
+  countEl.innerHTML = `<span>共 ${list.length} 則新聞</span>${homeBtn}`;
   const el = document.getElementById("articles");
   el.innerHTML = list.map((a,i) => {
     const isChinese = /[\u4e00-\u9fff]/.test(a.title);
